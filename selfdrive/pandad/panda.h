@@ -1,5 +1,7 @@
 #pragma once
 
+#define _USE_FLEXRAY_HARNESS_   // dolson for Flexray logging
+
 #include <cstdint>
 #include <ctime>
 #include <functional>
@@ -41,6 +43,35 @@ struct can_frame {
   std::string dat;
   long src;
 };
+
+
+#ifdef _USE_FLEXRAY_HARNESS_
+// max 265 = header (6) + flags (1) + counter(1) + data (254)  + CRC(3)
+// FPAGA -> COMMA (BIG ENDIAN-> LITTLE)
+struct __attribute__((packed)) flexray_header {
+  uint8_t           : 1;
+  uint8_t extended  : 1;
+  uint8_t returned  : 1;
+  uint8_t rejected  : 1;
+  uint8_t bus       : 3;
+  uint8_t reserved  : 1;
+
+  uint8_t  flagsid  : 8; // 5bit
+  uint16_t frame_id : 8; // need make bit (flasgsid & 0x7) << 8 | frame_id
+
+  uint8_t crc_msb   : 1;
+  uint8_t length    : 7;
+  uint8_t crc       : 8;
+  uint8_t counter   : 6;
+  uint8_t crc_lsb   : 2;
+
+  // flags          : 8;      // for cabana
+  // counter        : 8;      // for cabana
+  //unsigned char   data[254];  //  add flags + counter + data
+  //unsigned int    crc       : 24;
+};
+
+#endif // FLEXRAY
 
 
 class Panda {
@@ -88,7 +119,12 @@ public:
 
 protected:
   // for unit tests
+  #if defined(_USE_FLEXRAY_HARNESS_)
+  uint8_t receive_buffer[RECV_SIZE + sizeof(can_header) + 266];
+  uint8_t calculate_flexray_checksum(uint8_t *data, uint16_t len);
+  #else
   uint8_t receive_buffer[RECV_SIZE + sizeof(can_header) + 64];
+  #endif
   uint32_t receive_buffer_size = 0;
 
   Panda(uint32_t bus_offset) : bus_offset(bus_offset) {}
