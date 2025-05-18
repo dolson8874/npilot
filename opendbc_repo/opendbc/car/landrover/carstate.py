@@ -111,6 +111,7 @@ class CarState(CarStateBase):
     ret = structs.CarState()
 
     self.is_metric = True
+    speed_factor = CV.KPH_TO_MS if self.is_metric else CV.MPH_TO_MS
 
     ret.seatbeltUnlatched = (cp.vl["SeatBelt"]["SeatBelt_Driver"]  == 0)
     ret.doorOpen = not any([cp.vl["DoorStatus"]["FrontLeftDoor"], \
@@ -166,7 +167,8 @@ class CarState(CarStateBase):
 
     ret.cruiseState.available = cp.vl["CruiseInfo"]["CruiseOn"] == 1
     ret.cruiseState.enabled =  cp.vl["CruiseInfo"]["CruiseOn"] == 1
-    ret.cruiseState.speed = ret.vEgoRaw
+    #ret.cruiseState.speed = ret.vEgoRaw
+    ret.cruiseState.speed = ret.vEgoRaw * speed_factor
     ret.cruiseState.standstill = False
 
     prev_cruise_buttons = self.cruise_buttons[-1]
