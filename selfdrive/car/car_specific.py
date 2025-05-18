@@ -6,6 +6,7 @@ from opendbc.car.hyundai.values import CANFD_CAR
 from opendbc.car.interfaces import MAX_CTRL_SPEED
 from opendbc.car.volkswagen.values import CarControllerParams as VWCarControllerParams
 from opendbc.car.hyundai.interface import ENABLE_BUTTONS as HYUNDAI_ENABLE_BUTTONS
+from opendbc.car.landrover.interface import ENABLE_BUTTONS as LANDROVER_ENABLE_BUTTONS
 from opendbc.car.hyundai.carstate import PREV_BUTTON_SAMPLES as HYUNDAI_PREV_BUTTON_SAMPLES
 
 from openpilot.selfdrive.selfdrived.events import Events
@@ -141,6 +142,20 @@ class CarSpecificEvents:
       # To avoid re-engaging when openpilot cancels, check user engagement intention via buttons
       # Main button also can trigger an engagement on these cars
       self.cruise_buttons.append(any(ev.type in HYUNDAI_ENABLE_BUTTONS for ev in CS.buttonEvents))
+      events = self.create_common_events(CS, CS_prev, extra_gears=(GearShifter.sport, GearShifter.manumatic),
+                                         pcm_enable=self.CP.pcmCruise)
+
+      # low speed steer alert hysteresis logic (only for cars with steer cut off above 10 m/s)
+      if CS.vEgo < (self.CP.minSteerSpeed + 2.) and self.CP.minSteerSpeed > 10.:
+        self.low_speed_alert = True
+      if CS.vEgo > (self.CP.minSteerSpeed + 4.):
+        self.low_speed_alert = False
+      if self.low_speed_alert:
+        events.add(EventName.belowSteerSpeed)
+
+    elif self.CP.brand == 'landrover':
+      # Main button also can trigger an engagement on these cars
+      self.cruise_buttons.append(any(ev.type in LANDROVER_ENABLE_BUTTONS for ev in CS.buttonEvents))
       events = self.create_common_events(CS, CS_prev, extra_gears=(GearShifter.sport, GearShifter.manumatic),
                                          pcm_enable=self.CP.pcmCruise)
 

@@ -2,7 +2,16 @@ from opendbc.car import get_safety_config, structs
 from opendbc.car.interfaces import CarInterfaceBase
 from opendbc.car.landrover.carcontroller import CarController
 from opendbc.car.landrover.carstate import CarState
-from opendbc.car.landrover.values import CAR
+from opendbc.car.landrover.values import CAR, Buttons
+
+ButtonType = structs.CarState.ButtonEvent.Type
+
+# Cancel button can sometimes be ACC pause/resume button, main button can also enable on some cars
+ENABLE_BUTTONS = (ButtonType.accelCruise, ButtonType.decelCruise, ButtonType.cancel, ButtonType.mainCruise)
+
+BUTTONS_DICT = {Buttons.RES_ACCEL: ButtonType.accelCruise, Buttons.SET_DECEL: ButtonType.decelCruise,
+                Buttons.GAP_DIST: ButtonType.gapAdjustCruise, Buttons.CANCEL: ButtonType.cancel}
+
 
 
 class CarInterface(CarInterfaceBase):
@@ -41,4 +50,7 @@ class CarInterface(CarInterfaceBase):
     ret.safetyConfigs = [get_safety_config(structs.CarParams.SafetyModel.landrover, ret.flags)]
 
     return ret
+
+  def get_buttons_dict(self):
+    return BUTTONS_DICT
 

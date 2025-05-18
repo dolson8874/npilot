@@ -41,7 +41,8 @@
 void print(const char *a);
 
 // kbps multiplied by 10
-#define SPEEDS_ARRAY_SIZE 8
+//#define SPEEDS_ARRAY_SIZE 8
+#define SPEEDS_ARRAY_SIZE 9  // dolson
 extern const uint32_t speeds[SPEEDS_ARRAY_SIZE];
 #define DATA_SPEEDS_ARRAY_SIZE 10
 extern const uint32_t data_speeds[DATA_SPEEDS_ARRAY_SIZE];
