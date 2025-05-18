@@ -1,11 +1,17 @@
 import math
+from collections import deque
 from opendbc.can.can_define import CANDefine
 from opendbc.can.parser import CANParser
-from opendbc.car import Bus, structs
+from opendbc.car import Bus, structs, create_button_events
 from opendbc.car.interfaces import CarStateBase
-from opendbc.car.landrover.values import DBC, CanBus, CarControllerParams, LandroverFlags
+from opendbc.car.landrover.values import DBC, Buttons, CanBus, CarControllerParams, LandroverFlags
 
 ButtonType = structs.CarState.ButtonEvent.Type
+
+PREV_BUTTON_SAMPLES = 8
+
+BUTTONS_DICT = {Buttons.RES_ACCEL: ButtonType.accelCruise, Buttons.SET_DECEL: ButtonType.decelCruise,
+                Buttons.GAP_DIST: ButtonType.gapAdjustCruise, Buttons.CANCEL: ButtonType.cancel}
 
 
 class CarState(CarStateBase):
@@ -18,9 +24,16 @@ class CarState(CarStateBase):
     else:
       self.shifter_values = self.can_define.dv["GEAR_PRND"]["GEAR_SHIFT"]
 
+    self.cruise_buttons: deque = deque([Buttons.NONE] * PREV_BUTTON_SAMPLES, maxlen=PREV_BUTTON_SAMPLES)
+    self.main_buttons: deque = deque([Buttons.NONE] * PREV_BUTTON_SAMPLES, maxlen=PREV_BUTTON_SAMPLES)
+    self.lda_button = 0
+
     self.is_metric = True
     self.params = CarControllerParams(CP)
     self.wheelbase = CP.wheelbase
+
+    self.lfa_btn = 0
+    self.lfa_enabled = False
 
 
   def update(self, can_parsers) -> structs.CarState:
@@ -139,6 +152,7 @@ class CarState(CarStateBase):
 
     ret.brake = cp.vl["Info02"]["BrakePedalPos"]
     ret.brakePressed = cp.vl["StopAndGo"]["BrakeDriver"] == 1
+    ret.brakeLights = cp.vl["HandleSignal"]["BrakeLed"] == 1
 
     ret.gas = cp.vl["GasPedal"]["GasPedalPos"]
     ret.gasPressed = cp.vl["GasPedal_ON"]["GasPedalDriver"] == 1
@@ -154,6 +168,30 @@ class CarState(CarStateBase):
     ret.cruiseState.enabled =  cp.vl["CruiseInfo"]["CruiseOn"] == 1
     ret.cruiseState.speed = ret.vEgoRaw
     ret.cruiseState.standstill = False
+
+    prev_cruise_buttons = self.cruise_buttons[-1]
+    prev_main_buttons = self.main_buttons[-1]
+    prev_lda_button = self.lda_button
+
+    self.cruise_buttons.extend(cp.vl_all["CruiseInfo"]["CruiseOn"])
+    self.main_buttons.extend(cp.vl_all["CruiseInfo"]["CruiseOn"])
+    self.lda_button = cp.vl["LKAS_BTN"]["LKAS_Btn_on"]
+
+
+    ret.buttonEvents = [*create_button_events(self.cruise_buttons[-1], prev_cruise_buttons, BUTTONS_DICT),
+                        *create_button_events(self.main_buttons[-1], prev_main_buttons, {1: ButtonType.mainCruise}),
+                        *create_button_events(self.lda_button, prev_lda_button, {1: ButtonType.lkas})]
+
+
+    # ------------------------------------------------------------------------
+    # custom messages
+
+    prev_lfa_btn = self.lfa_btn
+    self.lfa_btn = cp.vl["LKAS_BTN"]["LKAS_Btn_on"]
+    if prev_lfa_btn != 1 and self.lfa_btn == 1:
+      self.lfa_enabled = not self.lfa_enabled
+
+    ret.cruiseState.available = self.lfa_enabled
 
     return ret
 
