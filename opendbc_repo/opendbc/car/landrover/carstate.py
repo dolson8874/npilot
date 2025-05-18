@@ -188,8 +188,9 @@ class CarState(CarStateBase):
 
     prev_lfa_btn = self.lfa_btn
     self.lfa_btn = cp.vl["LKAS_BTN"]["LKAS_Btn_on"]
-    if prev_lfa_btn != 1 and self.lfa_btn == 1:
-      self.lfa_enabled = not self.lfa_enabled
+    #if prev_lfa_btn != 1 and self.lfa_btn == 1:
+    #  self.lfa_enabled = not self.lfa_enabled
+    self.lfa_enabled = self.lfa_btn
 
     ret.cruiseState.available = self.lfa_enabled
 
