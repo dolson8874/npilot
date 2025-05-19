@@ -99,6 +99,7 @@ legend = ["LAT_ACCEL_FACTOR", "MAX_LAT_ACCEL_MEASURED", "FRICTION"]
 "KIA_K7" = [2.3, 2.3, 0.1]
 "KIA_K7_HEV" = [2.3, 2.3, 0.1]
 "KIA_K9" = [2.3, 2.3, 0.1]
+"KIA_SOUL_EV" = [2.3, 2.3, 0.1]
 
 # Land Rover Defender angle based controllers
 "LANDROVER_DEFENDER_2023"  = [3.0, 3.0, 0.01]
