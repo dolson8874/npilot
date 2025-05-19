@@ -195,7 +195,7 @@ class CarState(CarStateBase):
     #  self.lfa_enabled = not self.lfa_enabled
     self.lfa_enabled = self.lfa_btn == 1
 
-    ret.cruiseState.available = self.lfa_enabled
+    #ret.cruiseState.available = self.lfa_enabled
 
     return ret
 
