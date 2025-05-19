@@ -1,5 +1,6 @@
 import math
 from collections import deque
+from opendbc.car.common.conversions import Conversions as CV
 from opendbc.can.can_define import CANDefine
 from opendbc.can.parser import CANParser
 from opendbc.car import Bus, structs, create_button_events
@@ -192,7 +193,7 @@ class CarState(CarStateBase):
     self.lfa_btn = cp.vl["LKAS_BTN"]["LKAS_Btn_on"]
     #if prev_lfa_btn != 1 and self.lfa_btn == 1:
     #  self.lfa_enabled = not self.lfa_enabled
-    self.lfa_enabled = self.lfa_btn
+    self.lfa_enabled = self.lfa_btn == 1
 
     ret.cruiseState.available = self.lfa_enabled
 
