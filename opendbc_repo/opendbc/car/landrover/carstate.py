@@ -1,5 +1,6 @@
 import math
 from collections import deque
+from opendbc.car.common.conversions import Conversions as CV
 from opendbc.can.can_define import CANDefine
 from opendbc.can.parser import CANParser
 from opendbc.car import Bus, structs, create_button_events
@@ -111,6 +112,7 @@ class CarState(CarStateBase):
     ret = structs.CarState()
 
     self.is_metric = True
+    speed_factor = CV.KPH_TO_MS if self.is_metric else CV.MPH_TO_MS
 
     ret.seatbeltUnlatched = (cp.vl["SeatBelt"]["SeatBelt_Driver"]  == 0)
     ret.doorOpen = not any([cp.vl["DoorStatus"]["FrontLeftDoor"], \
@@ -166,7 +168,8 @@ class CarState(CarStateBase):
 
     ret.cruiseState.available = cp.vl["CruiseInfo"]["CruiseOn"] == 1
     ret.cruiseState.enabled =  cp.vl["CruiseInfo"]["CruiseOn"] == 1
-    ret.cruiseState.speed = ret.vEgoRaw
+    #ret.cruiseState.speed = ret.vEgoRaw
+    ret.cruiseState.speed = ret.vEgoRaw * speed_factor
     ret.cruiseState.standstill = False
 
     prev_cruise_buttons = self.cruise_buttons[-1]
@@ -188,8 +191,9 @@ class CarState(CarStateBase):
 
     prev_lfa_btn = self.lfa_btn
     self.lfa_btn = cp.vl["LKAS_BTN"]["LKAS_Btn_on"]
-    if prev_lfa_btn != 1 and self.lfa_btn == 1:
-      self.lfa_enabled = not self.lfa_enabled
+    #if prev_lfa_btn != 1 and self.lfa_btn == 1:
+    #  self.lfa_enabled = not self.lfa_enabled
+    self.lfa_enabled = self.lfa_btn == 1
 
     ret.cruiseState.available = self.lfa_enabled
 
