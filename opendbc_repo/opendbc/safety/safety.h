@@ -1,7 +1,7 @@
 #pragma once
 
-#include "safety_declarations.h"
-#include "can.h"
+#include "opendbc/safety/safety_declarations.h"
+#include "opendbc/safety/board/can.h"
 
 // include the safety policies.
 #include "safety/safety_defaults.h"
@@ -25,7 +25,7 @@
 
 // CAN-FD only safety modes
 #ifdef CANFD
-#include "safety/safety_hyundai_canfd.h"
+#include "opendbc/safety/modes/hyundai_canfd.h"
 #endif
 
 uint32_t GET_BYTES(const CANPacket_t *msg, int start, int len) {
@@ -348,13 +348,10 @@ static void relay_malfunction_set(void) {
 }
 
 static void generic_rx_checks(void) {
+
   gas_pressed = brake_pressed = steering_disengage = false;
   controls_allowed = true;
 
-  // exit controls on rising edge of gas press
-  if (gas_pressed && !gas_pressed_prev && !(alternative_experience & ALT_EXP_DISABLE_DISENGAGE_ON_GAS)) {
-    controls_allowed = false;
-  }
   gas_pressed_prev = gas_pressed;
 
   // exit controls on rising edge of brake press
@@ -525,7 +522,7 @@ void update_sample(struct sample_t *sample, int sample_new) {
   }
 }
 
-static bool max_limit_check(int val, const int MAX_VAL, const int MIN_VAL) {
+bool max_limit_check(int val, const int MAX_VAL, const int MIN_VAL) {
   return (val > MAX_VAL) || (val < MIN_VAL);
 }
 
