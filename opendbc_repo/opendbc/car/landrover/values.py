@@ -39,7 +39,7 @@ class CarControllerParams:
     if CP.carFingerprint in (CAR.LANDROVER_DEFENDER_2023):
       self.STEER_DRIVER_ALLOWANCE = 200
       self.STEER_DRIVER_MULTIPLIER = 2
-      self.STEER_THRESHOLD = 20
+      self.STEER_THRESHOLD = 50
       self.STEER_STEP = 2  # 50 Hz
 
     elif CP.carFingerprint in (CAR.RANGEROVER_VOGUE_2017):
