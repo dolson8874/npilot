@@ -98,6 +98,8 @@ class CarState(CarStateBase):
 
     ret.stockAeb = False
 
+    ret.blockPcmEnable = False
+
     ret.cruiseState.available = cp.vl["CRUISE_CONTROL"]["CRUISE_ON"] == 1
     ret.cruiseState.enabled =  cp.vl["CRUISE_CONTROL"]["CRUISE_ON"] == 1
     ret.cruiseState.speed = ret.vEgoRaw
@@ -188,6 +190,8 @@ class CarState(CarStateBase):
 
     # ------------------------------------------------------------------------
     # custom messages
+
+    ret.blockPcmEnable = False
 
     prev_lfa_btn = self.lfa_btn
     self.lfa_btn = cp.vl["LKAS_BTN"]["LKAS_Btn_on"]

@@ -65,6 +65,17 @@ BO_ 490 VEHICLE_DYNAMICS: 8 VSA
  SG_ COUNTER : 61|2@0+ (1,0) [0|3] "" EON
  SG_ CHECKSUM : 59|4@0+ (1,0) [0|3] "" EON
 
+BO_ 597 ROUGH_WHEEL_SPEED: 8 VSA
+ SG_ WHEEL_SPEED_FL : 7|8@0+ (1,0) [0|255] "kph" EON
+ SG_ WHEEL_SPEED_FR : 15|8@0+ (1,0) [0|255] "kph" EON
+ SG_ WHEEL_SPEED_RL : 23|8@0+ (1,0) [0|255] "kph" EON
+ SG_ WHEEL_SPEED_RR : 31|8@0+ (1,0) [0|255] "kph" EON
+ SG_ SET_TO_X55 : 39|8@0+ (1,0) [0|255] "" EON
+ SG_ SET_TO_X55_2 : 47|8@0+ (1,0) [0|255] "" EON
+ SG_ LONG_COUNTER : 55|8@0+ (1,0) [0|255] "" EON
+ SG_ CHECKSUM : 59|4@0+ (1,0) [0|15] "" EON
+ SG_ COUNTER : 61|2@0+ (1,0) [0|3] "" EON
+
 BO_ 773 SEATBELT_STATUS: 7 BDY
  SG_ SEATBELT_DRIVER_LAMP : 7|1@0+ (1,0) [0|1] "" EON
  SG_ SEATBELT_PASS_UNLATCHED : 10|1@0+ (1,0) [0|1] "" EON
@@ -150,6 +161,11 @@ BO_ 1029 DOORS_STATUS: 8 BDY
  SG_ COUNTER : 61|2@0+ (1,0) [0|3] "" EON
  SG_ CHECKSUM : 59|4@0+ (1,0) [0|15] "" EON
 
+BO_ 1302 ODOMETER: 8 XXX
+ SG_ ODOMETER : 7|24@0+ (1,0) [0|16777215] "km" EON
+ SG_ COUNTER : 61|2@0+ (1,0) [0|3] "" EON
+ SG_ CHECKSUM : 59|4@0+ (1,0) [0|3] "" EON
+
 CM_ SG_ 304 "Seems to be platform-agnostic";
 CM_ SG_ 316 "Should exist on Nidec";
 CM_ SG_ 420 BRAKE_HOLD_RELATED "On when Brake Hold engaged";
@@ -216,20 +232,9 @@ BO_ 506 BRAKE_COMMAND: 8 ADAS
  SG_ COUNTER : 61|2@0+ (1,0) [0|3] "" EBCM
  SG_ CHECKSUM : 59|4@0+ (1,0) [0|15] "" EBCM
 
-BO_ 597 ROUGH_WHEEL_SPEED: 8 VSA
- SG_ WHEEL_SPEED_FL : 7|8@0+ (1,0) [0|255] "mph" EON
- SG_ WHEEL_SPEED_FR : 15|8@0+ (1,0) [0|255] "mph" EON
- SG_ WHEEL_SPEED_RL : 23|8@0+ (1,0) [0|255] "mph" EON
- SG_ WHEEL_SPEED_RR : 31|8@0+ (1,0) [0|255] "mph" EON
- SG_ SET_TO_X55 : 39|8@0+ (1,0) [0|255] "" EON
- SG_ SET_TO_X55_2 : 47|8@0+ (1,0) [0|255] "" EON
- SG_ COUNTER : 61|2@0+ (1,0) [0|3] "" EON
- SG_ CHECKSUM : 59|4@0+ (1,0) [0|15] "" EON
-
 BO_ 829 LKAS_HUD: 5 ADAS
  SG_ CAM_TEMP_HIGH : 7|1@0+ (1,0) [0|255] "" BDY
  SG_ SET_ME_X41 : 6|7@0+ (1,0) [0|127] "" BDY
- SG_ BOH : 6|7@0+ (1,0) [0|127] "" BDY
  SG_ CAMERA_OVERHEAT : 15|1@0+ (1,0) [0|1] "" BDY
  SG_ DASHED_LANES : 14|1@0+ (1,0) [0|1] "" BDY
  SG_ DTC : 13|1@0+ (1,0) [0|1] "" BDY
@@ -325,11 +330,6 @@ BO_ 862 HIGHBEAM_CONTROL: 8 ADAS
  SG_ AUTO_HIGHBEAMS_ACTIVE : 53|1@0+ (1,0) [0|1] "" XXX
  SG_ COUNTER : 61|2@0+ (1,0) [0|3] "" XXX
  SG_ CHECKSUM : 59|4@0+ (1,0) [0|15] "" XXX
-
-BO_ 1302 ODOMETER: 8 XXX
- SG_ ODOMETER : 7|24@0+ (1,0) [0|16777215] "km" EON
- SG_ COUNTER : 61|2@0+ (1,0) [0|3] "" EON
- SG_ CHECKSUM : 59|4@0+ (1,0) [0|3] "" EON
 
 CM_ SG_ 401 GEAR "10 = reverse, 11 = transition";
 VAL_ 399 STEER_STATUS 5 "fault" 4 "no_torque_alert_2" 2 "no_torque_alert_1" 0 "normal" ;
