@@ -21,7 +21,11 @@
 #include "selfdrive/pandad/panda_comms.h"
 
 #define FTDI_DEVICE_ID  0x0403
+#if 0
 #define FTDI_PRODUCT_ID 0x6010
+#else
+#define FTDI_PRODUCT_ID 0x6011
+#endif
 
 PandaFtdiHandle::PandaFtdiHandle(std::string serial) : PandaCommsHandle(serial) {
   char serial_no[128];
@@ -42,9 +46,9 @@ PandaFtdiHandle::PandaFtdiHandle(std::string serial) : PandaCommsHandle(serial) 
     goto fail;
   }
 
-  if (ftdi_set_bitmode(ftdi_ctx,  0xff, BITMODE_RESET) < 0)
+  if (ftdi_set_bitmode(ftdi_ctx,  0xff, BITMODE_OPTO) < 0)
   {
-    LOGW("Can't set synchronous fifo mode, Error %s",
+    LOGW("Can't set Opto-isolated Serial mode, Error %s",
           ftdi_get_error_string(ftdi_ctx));
     goto fail;
   }
