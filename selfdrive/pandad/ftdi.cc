@@ -3,8 +3,6 @@
 
 #ifdef _USE_FLEXRAY_HARNESS_
 
-#include "selfdrive/pandad/libftdi.h"
-#include "selfdrive/pandad/libftdi.c"
 #include <sys/file.h>
 #include <sys/ioctl.h>
 
@@ -27,55 +25,37 @@
 #define FTDI_PRODUCT_ID 0x6011
 #endif
 
+#define FLEXRAY_SOCKET_PATH   "/tmp/flexraylogd_unix_socket"
+
+int connect_to_server(struct sockaddr_un *addr) {
+    int sfd;
+
+    sfd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (sfd < 0) {
+        perror("socket");
+        return -1;
+    }
+    if (connect(sfd, (struct sockaddr*)addr, sizeof(struct sockaddr)) < 0) {
+        perror("connect");
+        close(sfd);
+        return -1;
+    }
+    return sfd;
+}
+
 PandaFtdiHandle::PandaFtdiHandle(std::string serial) : PandaCommsHandle(serial) {
   char serial_no[128];
-
-  if((ftdi_ctx = ftdi_new()) == 0) {
-    LOGW("FTDI : fail ftdi_new");
-    return;
-  }
-
-  if(ftdi_set_interface(ftdi_ctx, INTERFACE_B) < 0) {
-    LOGW("FTDI : fail ftdi_set_interface");
-    goto fail;
-  }
-
-
-  if (ftdi_usb_open_desc(ftdi_ctx, FTDI_DEVICE_ID, FTDI_PRODUCT_ID, NULL, serial.c_str()) < 0) {
-    LOGW("FTDI : Can't open ftdi\n");
-    goto fail;
-  }
-
-  if (ftdi_set_bitmode(ftdi_ctx,  0xff, BITMODE_OPTO) < 0)
-  {
-    LOGW("Can't set Opto-isolated Serial mode, Error %s",
-          ftdi_get_error_string(ftdi_ctx));
-    goto fail;
-  }
-
-  if (ftdi_set_latency_timer(ftdi_ctx, 2)) {
-    LOGW("Can't set latency : (%s)", ftdi_get_error_string(ftdi_ctx));
-    goto fail;
-  }
 
   sprintf(serial_no, "%04x%04x", FTDI_DEVICE_ID, FTDI_PRODUCT_ID);
 
   hw_serial =  serial_no;
+  sockfd = -1;
 
-  #if 0
-  if (!serial.empty() && (serial != hw_serial)) {
-    LOGW("FTDI : not match serial");
-    goto fail;
-  }
-  #endif
+  memset(&sock_addr, 0, sizeof(sock_addr));
+  sock_addr.sun_family = AF_UNIX;
+  strncpy(sock_addr.sun_path, FLEXRAY_SOCKET_PATH, sizeof(sock_addr.sun_path) - 1);
 
   return;
-
-
-fail:
-  LOGW("FTDI : panda() fail");
-  cleanup();
-  throw std::runtime_error("Error connecting to flexray panda");
 }
 
 
@@ -86,11 +66,7 @@ PandaFtdiHandle::~PandaFtdiHandle() {
 }
 
 void PandaFtdiHandle::cleanup() {
-  if (ftdi_ctx) {
-    ftdi_usb_close(ftdi_ctx);
-    ftdi_free(ftdi_ctx);
-    ftdi_ctx = NULL;
-  }
+  if(sockfd < 0) close (sockfd);
 }
 
 
@@ -134,20 +110,28 @@ int PandaFtdiHandle::bulk_write(unsigned char endpoint, unsigned char* data, int
 }
 
 int PandaFtdiHandle::bulk_read(unsigned char endpoint, unsigned char* data, int length, unsigned int timeout) {
-  int recv;
+  int recv = -1;
+  struct timeval tv;
 
-  if(!ftdi_ctx) return -1;
+  tv.tv_sec = 0;
+  tv.tv_usec = timeout;
 
-  std::lock_guard lk(hw_lock);
 
-  ftdi_ctx->usb_read_timeout = timeout;
-  recv = ftdi_read_data(ftdi_ctx, data, length);
+  sockfd = connect_to_server(&sock_addr);
+
+  if(sockfd >= 0) {
+    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
+    recv = read(sockfd, data, length);
+  }
 
   if(recv < 0)
   {
     LOGW("FTDI : fail read_data %d", recv);
     comms_healthy = false;
   }
+
+  close(sockfd);
+  sockfd = -1;
 
   return recv;
 }
@@ -156,40 +140,26 @@ int PandaFtdiHandle::bulk_read(unsigned char endpoint, unsigned char* data, int 
 std::vector<std::string> PandaFtdiHandle::list() {
   std::vector<std::string> serials;
 
-  int ret;
-  struct ftdi_context *ftdi;
-  struct ftdi_device_list *devlist, *curdev;
-  char sn[128];
+  int sfd;
+  char serial_no[128];
 
-  if ((ftdi = ftdi_new()) == 0)
-  {
-      goto finish;
+  struct sockaddr_un saddr;
+
+
+  memset(&saddr, 0, sizeof(saddr));
+  saddr.sun_family = AF_UNIX;
+  strncpy(saddr.sun_path, FLEXRAY_SOCKET_PATH, sizeof(saddr.sun_path) - 1);
+
+  sprintf(serial_no, "%04x%04x", FTDI_DEVICE_ID, FTDI_PRODUCT_ID);
+
+
+
+  sfd = connect_to_server(&saddr);
+
+  if(sfd >= 0) {
+    serials.push_back(serial_no);
+    close(sfd);
   }
-
-  if ((ret = ftdi_usb_find_all(ftdi, &devlist, FTDI_DEVICE_ID, FTDI_PRODUCT_ID)) < 0)
-  {
-        goto finish;
-  }
-
-  for (curdev = devlist; curdev != NULL; )
-  {
-    if ((ret=ftdi_usb_get_strings(ftdi, curdev->dev, NULL, 0, NULL, 0, sn, 128)) < 0)
-    {
-        goto done;
-    }
-
-    //LOGW("FTDI serial number  %s", sn);
-    serials.push_back(std::string((char *)sn, strlen(sn)).c_str());
-    curdev = curdev->next;
-  }
-
-
-done:
-  ftdi_list_free(&devlist);
-
-finish:
-
-  if(ftdi) ftdi_free(ftdi);
 
   return serials;
 }

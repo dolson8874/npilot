@@ -93,7 +93,9 @@ private:
 #endif
 
 #ifdef  _USE_FLEXRAY_HARNESS_
-#include "libftdi.h"
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 class PandaFtdiHandle : public PandaCommsHandle {
 public:
   PandaFtdiHandle(std::string serial);
@@ -107,8 +109,9 @@ public:
   static std::vector<std::string> list();
 
 private:
-  struct ftdi_context *ftdi_ctx = NULL;
   inline static std::recursive_mutex hw_lock;
+  int sockfd;
+  struct sockaddr_un sock_addr;
 
 };
 #endif
