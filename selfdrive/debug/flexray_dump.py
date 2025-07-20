@@ -1,10 +1,17 @@
 #!/usr/bin/env python3
+import os
+import time
+
 import argparse
 import binascii
 from collections import defaultdict
 
 import cereal.messaging as messaging
-from common.realtime import sec_since_boot
+#from common.realtime import sec_since_boot
+
+def sec_since_boot():
+  return time.time()
+
 
 
 def flexray_printer(bus, max_msg, addr, ascii_decode, canaddr):
@@ -32,7 +39,7 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="simple CAN data viewer",
                                    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-  parser.add_argument("--bus", type=int, help="CAN bus to print out", default=5)
+  parser.add_argument("--bus", type=int, help="CAN bus to print out", default=6)
   parser.add_argument("--max_msg", type=int, help="max addr")
   parser.add_argument("--ascii", action='store_true', help="decode as ascii")
   parser.add_argument("--addr", default="127.0.0.1")

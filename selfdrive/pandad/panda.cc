@@ -20,7 +20,7 @@ Panda::Panda(std::string serial, uint32_t bus_offset) : bus_offset(bus_offset) {
   } catch (std::exception &e) {
 
       #ifndef __APPLE__
-      if(serial.compare(0, 3, "ARA") == 0)
+      if(serial.compare(0, 3, "FLX") == 0)
         handle = std::make_unique<PandaFtdiHandle>(serial);
       else
         handle = std::make_unique<PandaSpiHandle>(serial);
