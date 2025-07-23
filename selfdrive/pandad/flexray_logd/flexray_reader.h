@@ -8,6 +8,7 @@
 #define FTDI_VID 0x6011
 
 
+int open_ftdi_dev();
 void *read_ftdi_spi(void *arg);
 
 struct flexray_reader_args {

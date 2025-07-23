@@ -4,28 +4,23 @@
 #include "flexray_reader.h"
 #include "ftdispi.h"
 
-void *read_ftdi_spi(void *arg)
+struct ftdi_context    fc;
+struct ftdispi_context fsc;
+
+int open_ftdi_dev()
 {
-    struct flexray_reader_args *args = (struct flexray_reader_args*)arg;
-
-    struct ftdi_context    fc;
-    struct ftdispi_context fsc;
-    char buf[SPI_CHUNK_SIZE];
-    char pending_buf[SPI_CHUNK_SIZE];
-    int pending_len = 0;
-
     int i;
 
     if (ftdi_init(&fc) < 0)
     {
         fprintf(stderr, "ftdi_init failed\n");
-        return NULL;
+        return -1;
     }
 
     if(ftdi_set_interface(&fc, INTERFACE_B) < 0)
     {
       fprintf(stderr, "Set Int Fail\n");
-      return NULL;
+      return -1;
     }
 
     i = ftdi_usb_open(&fc, FTDI_PID, FTDI_VID);
@@ -34,9 +29,23 @@ void *read_ftdi_spi(void *arg)
         fprintf(stderr,
                 "OPEN: %s\n",
                 ftdi_get_error_string(&fc));
-        *args->running = 0;
-        return NULL;
+        return -1;
     }
+
+    return 0;
+}
+
+
+void *read_ftdi_spi(void *arg)
+{
+    struct flexray_reader_args *args = (struct flexray_reader_args*)arg;
+
+    char buf[SPI_CHUNK_SIZE];
+    char pending_buf[SPI_CHUNK_SIZE];
+    int pending_len = 0;
+
+    //if (open_ftdi_dev() < 0) return NULL;
+
     ftdispi_open(&fsc, &fc, INTERFACE_B);
     ftdispi_setmode(&fsc, 1, 0, 0, 0, 0, 0);
     //ftdispi_setclock(&fsc, 10000000);

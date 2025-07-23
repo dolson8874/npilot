@@ -221,6 +221,8 @@ void *server_thread(void *arg) {
 int main() {
     pthread_t t1, t2, t3;
 
+    if(open_ftdi_dev() < 0) return -1;
+
 		signal(SIGINT, sigintHandler);
     signal(SIGPIPE, SIG_IGN);
 
