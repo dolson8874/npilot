@@ -69,9 +69,19 @@ class CarController(CarControllerBase):
          if (self.frame % fr_step == 0):  # 25 0.25s period
            can_sends.append([addr, bus, vl, 0])
 
+      if self.frame % 4 == 0:
+        can_sends.append(
+          create_lkas_command(
+             self.packer,
+             CC.latActive,
+             self.lkascnt,
+             int(apply_torque),
+             ))
+        self.lkascnt += 1
 
-    if self.frame % 2 == 0:
-      if self.CP.flags & LandroverFlags.FLEXRAY_HARNESS:
+    else:
+      # FLEXRAY_HARNESS
+      if self.frame % 2 == 0:
         # Angular rate limit based on speed
         self.apply_angle_last = \
              apply_std_steer_angle_limits(actuators.steeringAngleDeg,
@@ -85,30 +95,21 @@ class CarController(CarControllerBase):
              self.packer,
              CC.enabled, CC.latActive,
              self.apply_angle_last,
-             self.frame % 255,
+             self.lkascnt,
              ))
+        self.lkascnt += 1
 
-    if self.frame % 4 == 0:
-      if self.CP.flags & LandroverFlags.FLEXRAY_HARNESS:
+      if self.frame % 4 == 0:
         # HUD control
         left_lane, right_lane = process_hud(CC.enabled, CC.latActive, CS.out.leftBlindspot, CS.out.rightBlindspot, hud_control)
         # HUD msg
         can_sends.append(
-          create_hud_command_defender(
-             self.packer,
-             CC.enabled, CC.latActive,
-             self.frame % 255,
-             left_lane, right_lane))
-      else:
-        can_sends.append(
-          create_lkas_command(
-             self.packer,
-             CC.latActive,
-             self.lkascnt,
-             int(apply_torque),
-             ))
+            create_hud_command_defender(
+            self.packer,
+            CC.enabled, CC.latActive,
+            self.frame % 255,
+            left_lane, right_lane))
 
-        self.lkascnt += 1
 
 
     new_actuators = actuators.as_builder()

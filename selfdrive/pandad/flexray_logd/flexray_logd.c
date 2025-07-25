@@ -26,12 +26,14 @@ pthread_mutex_t raw_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t proc_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 volatile int running = 1;
+volatile int do_exit = 0;
 int server_fd = -1;
 
 
 static void
 sigintHandler(int signum) {
     running = 0;
+    do_exit = 1;
     if (server_fd >= 0) close(server_fd);
     unlink(SOCKET_PATH);
 		server_fd = -1;
@@ -221,9 +223,14 @@ void *server_thread(void *arg) {
 int main() {
     pthread_t t1, t2, t3;
 
-    if(open_ftdi_dev() < 0) return -1;
+    if(open_ftdi_dev() < 0) {
+        while(do_exit == 0) usleep(100);
+
+        return -1;
+    }
 
 		signal(SIGINT, sigintHandler);
+		signal(SIGKILL, sigintHandler);
     signal(SIGPIPE, SIG_IGN);
 
     struct flexray_reader_args reader_args = {
