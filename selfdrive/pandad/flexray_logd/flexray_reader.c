@@ -49,7 +49,7 @@ void *read_ftdi_spi(void *arg)
     ftdispi_open(&fsc, &fc, INTERFACE_B);
     ftdispi_setmode(&fsc, 1, 0, 0, 0, 0, 0);
     //ftdispi_setclock(&fsc, 10000000);
-    ftdispi_setclock(&fsc, 9000000);
+    ftdispi_setclock(&fsc, 7500000);
     ftdispi_setloopback(&fsc,  0);
 
     while(args->running) {
@@ -77,7 +77,7 @@ void *read_ftdi_spi(void *arg)
             memcpy(pending_buf, buf, bytes_read);
             pending_len = bytes_read;
 
-            //fprintf(stderr, "[OVERFLOW]  %zu, free %zu, write %zu, read %zu\n", (size_t)bytes_read, free_space, *args->raw_wpos, *args->raw_rpos);
+            fprintf(stderr, "[ftOVERFLOW]  %zu, free %zu, write %zu, read %zu\n", (size_t)bytes_read, free_space, *args->raw_wpos, *args->raw_rpos);
             pthread_mutex_unlock(args->raw_mutex);
             continue;
           }

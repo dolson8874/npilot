@@ -92,6 +92,7 @@ void *processing_thread(void *arg) {
             pthread_mutex_lock(&proc_mutex);
             free = (proc_rpos > proc_wpos) ?
                         (proc_rpos - proc_wpos - 1) : (SPI_BUFFER_SIZE - proc_wpos + proc_rpos - 1);
+
         }
 
         size_t pend = SPI_BUFFER_SIZE - proc_wpos;
