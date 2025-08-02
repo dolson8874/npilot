@@ -70,8 +70,7 @@ size_t decode_flexray_buffer(char *data, size_t *psize, char *out) {
 
     frame_id = fheader->frame_id | ((fheader->flagsid & 0x7) << 8);
 
-    //LOGW("flex_len %d (%02x)", data_len, fheader->length);
-
+    //printf("id=%x cycle=%d\n", frame_id, fheader->counter);
 
    if (pos + sizeof(struct can_header) + data_len > size) {
       // we don't have all the data for this message yet

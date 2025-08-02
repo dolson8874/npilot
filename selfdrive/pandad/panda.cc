@@ -311,7 +311,7 @@ bool Panda::unpack_can_buffer(uint8_t *data, uint32_t &size, std::vector<can_fra
       memcpy(&header, &data[pos], sizeof(can_header));
 
       // flags(1) + counter (1) + data (len) + CRC (3)
-      // use flexray data length  
+      // use flexray data length
       data_len =  header.checksum * 2 + 5;
 
     } else {
