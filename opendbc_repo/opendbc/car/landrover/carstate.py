@@ -48,6 +48,7 @@ class CarState(CarStateBase):
     self.is_metric = True
 
     ret.seatbeltUnlatched = (cp.vl["SEAT_BELT"]["SEAT_BELT_DRIVER"]  == 0)
+    ret.seatbeltUnlatched = False
     ret.doorOpen = False
 
     ret.wheelSpeeds = self.get_wheel_speeds(
@@ -211,29 +212,30 @@ class CarState(CarStateBase):
     pt_messages = [
       # sig_name, freq
       ("EPS_00", 50),
-      ("EPS_01", 50),
-      ("EPS_02", 50),
-      ("EPS_03", 50),
+      ("EPS_01", 100),
+      ("EPS_02", 100),
+      ("EPS_03", 100),
       ("EPS_04",  50),
-      ("SPEED_01", 50),
+      ("SPEED_01", 30),
       ("SPEED_02", 50),
       ("SPEED_03", 50),
       ("SPEED_04", 50),
-      ("CRUISE_CONTROL", 10),
+      ("CRUISE_CONTROL", 100),
       ("SEAT_BELT", 5),
       ("LKAS_HUD_STAT", 50),
       ("HEAD_LIGHT", 5),
       ("TURN_SIGNAL", 10),
       ("GEAR_PRND", 10),
-      ("LEFT_ALERT", 10),
-      ("RIGHT_ALERT", 10),
-      ("CR00", 50),
+      ("LEFT_ALERT", 50),
+      ("RIGHT_ALERT", 50),
+      ("CR00", 30),
       ("ACCELATOR_DRIVER", 100),
     ]
 
     cam_messages = [
       ("LKAS_RUN", 25),
-      ("LKAS_STATUS", 25),
+      ("LKAS_STATUS", 8),
+      ("LKAS_READY", 50),
     ]
 
     return {

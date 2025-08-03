@@ -146,9 +146,9 @@ static safety_config landrover_init(uint16_t param) {
   const int LANDROVER_PARAM_FLEXRAY_HARNESS = 1;
 
   static const CanMsg LANDROVER_TX_MSGS[] = {
-     {0x28F, 1, 8, .check_relay = true},
-     {0x3D4, 1, 8, .check_relay = false},
-     {0x1D8, 0, 8, .check_relay = true, .disable_static_blocking = true}, // check for relay
+     {0x28F, 0, 8, .check_relay = true},
+     {0x3D4, 0, 8, .check_relay = true},
+     {0x1D8, 0, 8, .check_relay = true},
   };
 
   // 0x1F0 = LkasCmd, 0x1F1 = ACC
@@ -165,9 +165,7 @@ static safety_config landrover_init(uint16_t param) {
 
   static RxCheck landrover_rx_checks[] = {
     {.msg = {{0xf2, 0, 8, .frequency = 100U, .ignore_checksum = true, .ignore_counter = true}, { 0 }, { 0 }}},   // EPS_01 (STEER_ANGLE01)
-    {.msg = {{0x32, 0, 8, .frequency = 50U, .ignore_checksum = true, .ignore_counter = true}, { 0 }, { 0 }}},   // PSCM_Out (angleTorque)
     {.msg = {{0x1CB, 0, 8, .frequency = 50U, .ignore_checksum = true, .ignore_counter = true}, { 0 }, { 0 }}},    // SPEED_02  SPEED02
-    {.msg = {{0x2e, 0, 4, .frequency = 50U, .ignore_checksum = true, .ignore_counter = true}, { 0 }, { 0 }}},    // SWM_Torque (driver torque)
     {.msg = {{0x158, 0, 8, .frequency = 100U, .ignore_checksum = true, .ignore_counter = true}, { 0 }, { 0 }}},   // ACCELATOR_DRIVER (ACCELATOR_DRIVER)
     {.msg = {{0x156, 0, 8, .frequency = 100U, .ignore_checksum = true, .ignore_counter = true}, { 0 }, { 0 }}},    // CRUISE_CONTROL (DRIVER_BRAKE, CRUISE_ON)
     {.msg = {{0x28F, 2, 8, .frequency = 25U, .ignore_checksum = true, .ignore_counter = true}, { 0 }, { 0 }}},   // CAM msg LKAS_RUN

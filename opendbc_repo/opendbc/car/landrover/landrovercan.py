@@ -1,5 +1,9 @@
 from opendbc.car.landrover.values import CanBus
 from opendbc.car.landrover.lkas_crc_table import find_steer_torque
+from opendbc.car.can_definitions import CanData
+import binascii
+import codecs
+
 
 # crc8 poly=0x1d, xor=0xcc , 32bit
 def defender_crc(data):
@@ -18,6 +22,30 @@ def defender_crc(data):
    return crc ^ 0xcc
 
 
+# RR 2017
+# 15 all green
+# 1d left green, right white
+# 35 left white, right green,
+def create_lkas_hud(packer, left_line, right_line):
+  values = {
+    # "GREEN2WHITE_RIGHT": 2 if right_lane_depart else 1 if right_line else 3,
+    # "GREEN2WHITE_LEFT": 2 if left_lane_depart else 1 if left_line else 3,
+    "GREEN2WHITE_RIGHT": right_line,
+    "GREEN2WHITE_LEFT":  left_line,
+    "NEW_41" : 0x41,
+    "NEW_01" : 1,
+    "NEW_0d" : 0xd,
+    "NEW_1_1": 1,
+    "NEW_e7" : 0xe7,
+    "NEW_2" : 2,
+    "NEW_ed" : 0xed,
+    "NEW_00" : 0
+  }
+
+  return packer.make_can_msg("LKAS_STATUS", 0, values)
+
+
+
 # LKAS_COMMAND 0x28F (655) Lane-keeping signal to turn the wheel.
 def create_lkas_command(packer, lkas_run, frame, apply_steer):
   counter = frame % 0x10
@@ -34,8 +62,16 @@ def create_lkas_command(packer, lkas_run, frame, apply_steer):
     "LKAS_GREEN" : 1
   }
 
-  return packer.make_can_msg("LKAS_RUN", CanBus.UNDERBODY, values)
+  dat = [ 0xeb, 0xff, 0xff, 0xe4, 0x00, 0x70, 0x00, 0x00 ]
 
+  dat[0] = crc
+  dat[3] = (((counter << 3) | ((torque & 0x700) >> 8)) | 0x80)
+  dat[4] = torque & 0xFF
+
+  candat = binascii.hexlify(bytearray(dat))
+
+  #return packer.make_can_msg("LKAS_RUN", CanBus.UNDERBODY, values)
+  return CanData(0x28F,  codecs.decode(candat, 'hex'), CanBus.UNDERBODY)
 
 
 def create_lkas_command_defender(packer, enable, latActive, apply_angle, cnt):
