@@ -19,12 +19,13 @@ char proc_buffer[SPI_BUFFER_SIZE];
 size_t proc_wpos =0, proc_rpos = 0;
 
 
-char receive_buffer[SPI_BUFFER_SIZE+ 272];
+char receive_buffer[SPI_BUFFER_SIZE];
 size_t receive_buffer_size = 0;
 
 pthread_mutex_t raw_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t proc_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+volatile int is_decode = 1;
 volatile int running = 1;
 volatile int do_exit = 0;
 int server_fd = -1;
@@ -42,8 +43,9 @@ sigintHandler(int signum) {
 }
 
 
-
 void *processing_thread(void *arg) {
+    int is_printed = 0;
+
     while (running) {
 				size_t cp_size = MAX_SEND_SIZE - receive_buffer_size;
 
@@ -73,12 +75,25 @@ void *processing_thread(void *arg) {
         }
         pthread_mutex_unlock(&raw_mutex);
 
+#if 0
+        printf("receive_buffer_size=%ld\n", receive_buffer_size);
+        for (ssize_t i = 0; i < receive_buffer_size; i++) {
+              printf("%02X ", (unsigned char)receive_buffer[i]);
+                if ((i + 1) % 16 == 0) printf("\n");
+        }
+        printf("\n");
+#endif
         receive_buffer_size += cp_size;
-
 
         char out[MAX_SEND_SIZE];
 
-				cp_size = decode_flexray_buffer(receive_buffer, &receive_buffer_size, out);
+        if (is_decode) {
+				  cp_size = decode_flexray_buffer(receive_buffer, &receive_buffer_size, out);
+        } else {
+          memcpy(out, receive_buffer, receive_buffer_size);
+          cp_size = receive_buffer_size;
+          receive_buffer_size = 0;
+        }
 
         pthread_mutex_lock(&proc_mutex);
 
@@ -93,6 +108,11 @@ void *processing_thread(void *arg) {
             free = (proc_rpos > proc_wpos) ?
                         (proc_rpos - proc_wpos - 1) : (SPI_BUFFER_SIZE - proc_wpos + proc_rpos - 1);
 
+            if (!is_printed) {
+              fprintf(stderr, "[flexray_logd:processOVERFLOW]  %zu, free %zu, write %zu, read %zu\n", (size_t)cp_size, free, proc_wpos, proc_rpos);
+            is_printed = 1;
+            }
+
         }
 
         size_t pend = SPI_BUFFER_SIZE - proc_wpos;
@@ -105,6 +125,7 @@ void *processing_thread(void *arg) {
             proc_wpos = cp_size - pend;
         }
         pthread_mutex_unlock(&proc_mutex);
+        is_printed = 0;
     }
     return NULL;
 }
@@ -221,11 +242,44 @@ void *server_thread(void *arg) {
 }
 
 
-int main() {
+int main(int argc, char *argv[]) {
     pthread_t t1, t2, t3;
+    char *filename= NULL;
+    int ft_type = -1;
+    int opt;
 
-    if(open_ftdi_dev() < 0) {
-        while(do_exit == 0) usleep(100);
+
+    while ((opt = getopt(argc, argv, "sf:")) != -1) {
+        switch (opt) {
+            case 's':
+                is_decode = 0;
+                break;
+            case 'f':
+                filename = optarg;
+                break;
+            default:
+                fprintf(stderr, "Usage: %s [-sf]\n", argv[0]);
+                fprintf(stderr, "      -s : skip decode frame\n");
+                fprintf(stderr, "      -f : file open data\n");
+                fprintf(stderr, "\n");
+                exit(EXIT_FAILURE);
+        }
+    }
+
+
+
+    for (int i = 1; i < argc - 1; i++) {
+        if (strcmp(argv[i], "-f") == 0) {
+            filename = argv[i+1];
+            break;
+        }
+    }
+
+
+    ft_type = open_ftdi(filename);
+
+    if(ft_type < 0) {
+        while(!do_exit) usleep(100);
 
         return -1;
     }
@@ -240,9 +294,10 @@ int main() {
         .raw_rpos = &raw_rpos,
         .raw_mutex = &raw_mutex,
         .running = &running,
+        .ft_type = ft_type
     };
 
-    pthread_create(&t1, NULL, read_ftdi_spi, (void *)&reader_args);
+    pthread_create(&t1, NULL, read_ftdi, (void *)&reader_args);
     pthread_create(&t2, NULL, processing_thread, NULL);
     pthread_create(&t3, NULL, server_thread, NULL);
 

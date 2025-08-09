@@ -1,5 +1,6 @@
 #ifndef FLEXRAY_COMMON_H
 #define FLEXRAY_COMMON_H
+
 #define SPI_CHUNK_SIZE 1024
 #define SPI_BUFFER_SIZE 0x10000
 #define SOCKET_PATH   "/tmp/flexraylogd_unix_socket"
