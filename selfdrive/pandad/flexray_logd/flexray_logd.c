@@ -85,10 +85,10 @@ void *processing_thread(void *arg) {
 #endif
         receive_buffer_size += cp_size;
 
-        char out[MAX_SEND_SIZE];
+        char out[MAX_SEND_SIZE+277];
 
         if (is_decode) {
-				  cp_size = decode_flexray_buffer(receive_buffer, &receive_buffer_size, out);
+				  cp_size = decode_flexray_buffer(receive_buffer, &receive_buffer_size, out, sizeof(out));
         } else {
           memcpy(out, receive_buffer, receive_buffer_size);
           cp_size = receive_buffer_size;
@@ -162,7 +162,7 @@ void *server_thread(void *arg) {
     	client_fd = accept(server_fd, NULL, NULL);
     	if (client_fd == -1) continue;
 
-      char cmd_buf[16] = {0};
+      unsigned char cmd_buf[16] = {0};
       ssize_t n = read(client_fd, cmd_buf, sizeof(cmd_buf));
       ssize_t req_size = MAX_SEND_SIZE;
 
@@ -182,7 +182,12 @@ void *server_thread(void *arg) {
             break;
           case 0x80 : // read buffer
             req_size = cmd_buf[1] << 8 | cmd_buf[2];
+            if (req_size > MAX_SEND_SIZE) 
+              req_size = MAX_SEND_SIZE;
             break;
+          default:
+            close(client_fd);
+            continue;
         }
       }
 
@@ -276,6 +281,7 @@ int main(int argc, char *argv[]) {
     }
 
 
+    //filename = "/data/dolson/flexray_logd/flexray_dump-fastserial-250808-01.log";
     ft_type = open_ftdi(filename);
 
     if(ft_type < 0) {

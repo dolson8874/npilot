@@ -90,7 +90,7 @@ void read_file_test(void *arg) {
     struct timeval start, end;
 
     while(*(args->running)) {
-        size_t bytes_read = 0;
+        int bytes_read = 0;
 
         gettimeofday(&start, NULL);
 
@@ -182,7 +182,7 @@ void read_ftdi_fastserial(void *arg) {
     fc.usb_read_timeout = 5;
 
     while(*(args->running)) {
-        size_t bytes_read = 0;
+        int bytes_read = 0;
 
         if(pending_len > 0) {
             bytes_read = pending_len;
@@ -255,7 +255,7 @@ void read_ftdi_spi(void *arg) {
 
     while(*(args->running)) {
         int status = FTDISPI_ERROR_NONE;
-        size_t bytes_read = 0;
+        int bytes_read = 0;
 
         if(pending_len > 0) {
             bytes_read = pending_len;
@@ -278,7 +278,7 @@ void read_ftdi_spi(void *arg) {
             memcpy(pending_buf, buf, bytes_read);
             pending_len = bytes_read;
 
-            if (!is_printed == 0) {
+            if (!is_printed) {
               fprintf(stderr, "[flexray_logd:spiOVERFLOW]  %zu, free %zu, write %zu, read %zu\n", (size_t)bytes_read, free_space, *args->raw_wpos, *args->raw_rpos);
               is_printed = 1;
             }

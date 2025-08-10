@@ -5,7 +5,6 @@
 #include <stdint.h>
 
 
-#ifndef _USE_FLEXRAY_HARNESS_
 struct __attribute__((packed)) can_header {
   uint8_t reserved : 1;
   uint8_t bus : 3;
@@ -16,7 +15,6 @@ struct __attribute__((packed)) can_header {
   uint32_t addr : 29;
   uint8_t checksum : 8;
 };
-#endif
 
 // max 265 = header (6) + flags (1) + counter(1) + data (254)  + CRC(3)
 // FPAGA -> COMMA (BIG ENDIAN-> LITTLE)
@@ -46,9 +44,7 @@ struct __attribute__((packed)) flexray_header {
 
 uint8_t calculate_flexray_checksum(uint8_t *header, uint16_t fid);
 
-#ifndef _USE_FLEXRAY_HARNESS_
-size_t decode_flexray_buffer(char *data, size_t *psize, char *out);
-#endif
+size_t decode_flexray_buffer(char *data, size_t *psize, char *out, size_t out_size);
 
 #endif
 

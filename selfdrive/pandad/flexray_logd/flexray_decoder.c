@@ -128,9 +128,8 @@ uint8_t calculate_flexray_checksum(uint8_t *header, uint16_t fid) {
 
 
 
-#ifndef _USE_FLEXRAY_HARNESS_
 // decode flexray for cabana
-size_t decode_flexray_buffer(char *data, size_t *psize, char *out) {
+size_t decode_flexray_buffer(char *data, size_t *psize, char *out, size_t out_size) {
 	int pos = 0;
   int o_size = 0;
   size_t  size = *psize;
@@ -144,7 +143,7 @@ size_t decode_flexray_buffer(char *data, size_t *psize, char *out) {
 
 
 		// find frame start
-    if(data[pos] != 0xCA && data[pos+1] != 0xA0) {
+    if(data[pos] != 0xCA || data[pos+1] != 0xA0) {
       pos++;
       continue;
     }
@@ -164,6 +163,10 @@ size_t decode_flexray_buffer(char *data, size_t *psize, char *out) {
 
    if (pos + sizeof(struct can_header) + data_len > size) {
       // we don't have all the data for this message yet
+      break;
+    }
+
+    if (out_size - o_size < sizeof(struct can_header) + data_len) {
       break;
     }
 
@@ -338,4 +341,3 @@ size_t decode_flexray_buffer(char *data, size_t *psize, char *out) {
 
   return o_size;
 }
-#endif
