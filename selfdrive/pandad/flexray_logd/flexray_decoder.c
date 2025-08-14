@@ -305,7 +305,8 @@ size_t decode_flexray_buffer(char *data, size_t *psize, char *out, size_t out_si
 
     }
 
-    memset((char *)&new_header, 0,  sizeof(new_header));
+    new_header.rejected = 0;
+    new_header.returned = 0;
     new_header.bus = fheader->bus;
     new_header.checksum = fheader->length;
 
