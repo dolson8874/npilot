@@ -6,8 +6,6 @@ libftdi_dir = str(Dir('libftdi').abspath)
 local_env = env.Clone()
 local_env.Append(CPPPATH=[current_dir, libftdi_dir])
 
-local_env.Replace(CC='gcc')
-
 libftdi = local_env.StaticLibrary('libftdi/ftdi', ['libftdi/ftdi.c'])
 libftdispi = local_env.StaticLibrary('libftdi/ftdispi', ['libftdi/ftdispi.c', libftdi])
 
